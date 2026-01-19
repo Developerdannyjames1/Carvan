@@ -2073,7 +2073,7 @@ class MotorhomeHabitationDampReportPdfService {
             child: hasImage
                 ? pw.Image(
                     pw.MemoryImage(data['attachedFileBytes'] as Uint8List),
-                    fit: pw.BoxFit.cover,
+                    fit: pw.BoxFit.contain,
                   )
                 : pw.Container(
                     decoration: pw.BoxDecoration(

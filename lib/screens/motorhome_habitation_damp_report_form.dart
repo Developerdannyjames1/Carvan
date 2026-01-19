@@ -2223,14 +2223,16 @@ void addPoint(int sectionIndex, Offset point) {
     _drawingPoints[sectionIndex] = [];
   }
   _drawingPoints[sectionIndex]!.add(point);
-  // Force update with a unique ID
-  update([sectionIndex, DateTime.now().millisecondsSinceEpoch]);
+  // Force update immediately to show drawing in real-time
+  // Update with section index to trigger GetBuilder rebuild
+  update([sectionIndex]);
 }
 
   // Add break point
   void addBreakPoint(int sectionIndex) {
     if (_drawingPoints.containsKey(sectionIndex)) {
       _drawingPoints[sectionIndex]!.add(Offset.zero);
+      // Force update
       update([sectionIndex]);
     }
   }
@@ -2296,10 +2298,11 @@ class SimpleDrawingPainter extends CustomPainter {
 
     final paint = Paint()
       ..color = Colors.red
-      ..strokeWidth = 4.0
+      ..strokeWidth = 5.0  // Increased for better visibility
       ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..isAntiAlias = true;  // Smoother lines
 
     // Draw connected lines
     for (int i = 0; i < points.length - 1; i++) {
@@ -2318,8 +2321,15 @@ class SimpleDrawingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(SimpleDrawingPainter oldDelegate) {
-    // Always repaint when points change
-    return oldDelegate.points != points;
+    // Always repaint - ensures real-time drawing visibility
+    // Compare by reference first (faster), then by content if needed
+    if (oldDelegate.points == points) return false;
+    if (oldDelegate.points.length != points.length) return true;
+    // Compare contents to ensure we repaint when points change
+    for (int i = 0; i < points.length; i++) {
+      if (oldDelegate.points[i] != points[i]) return true;
+    }
+    return false;
   }
 }
 
@@ -2870,7 +2880,6 @@ class _MotorhomeHabitationDampReportFormState extends State<MotorhomeHabitationD
     return GetBuilder<DrawingController>(
       id: sectionIndex,
       builder: (controller) {
-        final hasDrawing = controller.hasDrawing(sectionIndex);
         return Container(
           height: isSmallScreen ? 210 : 220,
           decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green.shade400, width: 2)),
@@ -2883,9 +2892,9 @@ class _MotorhomeHabitationDampReportFormState extends State<MotorhomeHabitationD
                     children: [
                       // Image
                       controller.getEditedImage(sectionIndex) != null
-                          ? Image.memory(controller.getEditedImage(sectionIndex)!, fit: BoxFit.cover, width: double.infinity)
+                          ? Image.memory(controller.getEditedImage(sectionIndex)!, fit: BoxFit.contain, width: double.infinity)
                           : sectionImageBytes[sectionIndex] != null
-                              ? Image.memory(sectionImageBytes[sectionIndex]!, fit: BoxFit.cover, width: double.infinity)
+                              ? Image.memory(sectionImageBytes[sectionIndex]!, fit: BoxFit.contain, width: double.infinity)
                               : Container(),
                 
                       // Tap hint
@@ -2978,10 +2987,12 @@ Widget _buildFullScreenImage(int sectionIndex) {
   return GetBuilder<DrawingController>(
     id: sectionIndex,
     builder: (controller) {
+      // Get current points count to track changes
+      final currentPointsCount = controller.getPoints(sectionIndex).length;
       return StatefulBuilder(
         builder: (context, setStateLocal) {
           // Local state to force repaint
-          int repaintCounter = 0;
+          int repaintCounter = currentPointsCount;
           
           return GestureDetector(
             behavior: HitTestBehavior.opaque,
@@ -2996,8 +3007,10 @@ Widget _buildFullScreenImage(int sectionIndex) {
                   if (localPosition.dx >= 0 && localPosition.dx <= size.width &&
                       localPosition.dy >= 0 && localPosition.dy <= size.height) {
                     controller.addPoint(sectionIndex, localPosition);
-                    // Force UI update
-                    setStateLocal(() => repaintCounter++);
+                    // Force both GetBuilder and StatefulBuilder to update
+                    setStateLocal(() {
+                      repaintCounter++;
+                    });
                   }
                 }
               }
@@ -3040,12 +3053,9 @@ Widget _buildFullScreenImage(int sectionIndex) {
                         child: Stack(
                           children: [
                             // Background image
-                            controller.getEditedImage(sectionIndex) != null
-                                ? Image.memory(
-                                    controller.getEditedImage(sectionIndex)!,
-                                    fit: BoxFit.contain,
-                                  )
-                                : sectionImageBytes[sectionIndex] != null
+                            // When in drawing mode, show original image. When not, show edited image if saved
+                            controller.getDrawingMode(sectionIndex)
+                                ? (sectionImageBytes[sectionIndex] != null
                                     ? Image.memory(
                                         sectionImageBytes[sectionIndex]!,
                                         fit: BoxFit.contain,
@@ -3061,19 +3071,40 @@ Widget _buildFullScreenImage(int sectionIndex) {
                                             ),
                                           ),
                                         ),
-                                      ),
+                                      ))
+                                : (controller.getEditedImage(sectionIndex) != null
+                                    ? Image.memory(
+                                        controller.getEditedImage(sectionIndex)!,
+                                        fit: BoxFit.contain,
+                                      )
+                                    : sectionImageBytes[sectionIndex] != null
+                                        ? Image.memory(
+                                            sectionImageBytes[sectionIndex]!,
+                                            fit: BoxFit.contain,
+                                          )
+                                        : Container(
+                                            color: Colors.grey,
+                                            child: Center(
+                                              child: Text(
+                                                'No Image',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontFamily: _fontFamily,
+                                                ),
+                                              ),
+                                            ),
+                                          )),
                             
-                            // Drawing overlay - ALWAYS SHOW when in drawing mode
-                            // Use Key to force repaint
+                            // Drawing overlay - ONLY SHOW when in drawing mode
+                            // This ensures drawings are visible in real-time as user draws
                             if (controller.getDrawingMode(sectionIndex))
-                              KeyedSubtree(
-                                key: ValueKey('drawing_${sectionIndex}_$repaintCounter'),
-                                child: Positioned.fill(
-                                  child: CustomPaint(
-                                    painter: SimpleDrawingPainter(
-                                      points: controller.getPoints(sectionIndex),
-                                    ),
+                              Positioned.fill(
+                                child: CustomPaint(
+                                  key: ValueKey('drawing_${sectionIndex}_${controller.getPoints(sectionIndex).length}'),
+                                  painter: SimpleDrawingPainter(
+                                    points: List.from(controller.getPoints(sectionIndex)),
                                   ),
+                                  willChange: true,
                                 ),
                               ),
                           ],
@@ -3096,12 +3127,11 @@ Widget _buildFullScreenImage(int sectionIndex) {
                             final newMode = !controller.getDrawingMode(sectionIndex);
                             controller.toggleDrawingMode(sectionIndex, newMode);
                             
-                            // if (newMode) {
-                            //   // Show instructions after a small delay
-                            //   Future.delayed(const Duration(milliseconds: 100), () {
-                            //     _showDrawingInstructions();
-                            //   });
-                            // }
+                            // If turning drawing mode OFF, clear any unsaved drawing points
+                            if (!newMode && controller.getPoints(sectionIndex).isNotEmpty) {
+                              // Keep the points but they won't be visible when mode is off
+                              // User can save before turning off, or start fresh when turning on again
+                            }
                             
                             // Force UI update
                             setStateLocal(() => repaintCounter++);
@@ -3289,37 +3319,6 @@ Widget _buildFullScreenImage(int sectionIndex) {
   );
 }
 
-// Also update the _showDrawingInstructions method to not block the UI:
-void _showDrawingInstructions() {
-  showDialog(
-    context: context,
-    barrierDismissible: true, // Changed to true so it doesn't block
-    builder: (context) => AlertDialog(
-      title: const Text('Drawing Instructions'),
-      content: const Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('• You are now in drawing mode'),
-          SizedBox(height: 8),
-          Text('• Draw directly on the image by dragging your finger'),
-          SizedBox(height: 8),
-          Text('• Your drawing will appear in real-time'),
-          SizedBox(height: 8),
-          Text('• Tap save to save your drawing'),
-          SizedBox(height: 8),
-          Text('• Tap clear to remove your drawing'),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('OK'),
-        ),
-      ],
-    ),
-  );
-}
 
   void _showImageInFullScreen(int sectionIndex) {
     setState(() {
