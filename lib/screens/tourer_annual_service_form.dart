@@ -4550,9 +4550,7 @@ class _TourerAnnualServiceScreenState extends State<TourerAnnualServiceScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-                    onPressed: () {
-                      Get.back();
-                    },
+                    onPressed: _showExitConfirmation, 
                   ),
                   const Spacer(),
                   Container(

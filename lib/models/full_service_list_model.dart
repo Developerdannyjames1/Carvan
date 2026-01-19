@@ -7,6 +7,15 @@ class FullServiceListModel {
   String jobReference = '';
   List<Uint8List> uploadedImages = [];
 
+  // Add comment fields for each section
+  String vehicleOnFloorComments = '';
+  String vehicleRaisedComments = '';
+  String vehicleFullyRaisedComments = '';
+  String vehicleHalfRaisedComments = '';
+  String underBonetOperationsComments = '';
+  String finalItemsChecksComments = '';
+   String finalizationComments = '';
+
   // Step 1: Customer Information
   String customerName = '';
   String makeModel = '';

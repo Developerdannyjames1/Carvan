@@ -73,21 +73,15 @@
 //   Map<String, String> selectedValues = {};
 //   List<String> dropdownOptions = ["P", "F", "N/A", "R"];
 
-//   // // Store selected values for each field
-//   // Map<String, String> selectedValues = {
-//   //   'Parts Included': '',
-//   //   'Top-ups Included': '',
-//   //   'General Checks': '',
-//   //   'Internal/Vision': '',
-//   //   'Engine': '',
-//   //   'Brake': '',
-//   //   'Wheels & Tyres': '',
-//   //   'Steering & Suspension': '',
-//   //   'Exhaust': '',
-//   //   'Drive System': '',
-//   // };
-
-//   // final List<String> dropdownOptions = ["P", "F", "N/A", "R"];
+//   // Text editing controllers for all text fields
+//   // Customer Information (Step 0)
+//   late TextEditingController customerNameController;
+//   late TextEditingController vehicleRegistrationController;
+//   late TextEditingController mileageController;
+//   late TextEditingController dateOfInspectionController;
+  
+//   // Comments field (Step 1)
+//   late TextEditingController commentsController;
 
 //   @override
 //   void initState() {
@@ -96,6 +90,26 @@
 //     for (int i = 0; i < stepTitles.length; i++) {
 //       stepController.markStepAsSkipped(i);
 //     }
+
+//     // Initialize text controllers with formData values
+//     // Customer Information (Step 0)
+//     customerNameController = TextEditingController(text: formData.customerName);
+//     vehicleRegistrationController = TextEditingController(text: formData.vehicleRegistration);
+//     mileageController = TextEditingController(text: formData.mileage);
+//     dateOfInspectionController = TextEditingController(text: formData.dateOfInspection);
+    
+//     // Comments field (Step 1)
+//     commentsController = TextEditingController(text: formData.comments);
+    
+//     // Add listeners to update formData when text changes
+//     // Customer Information (Step 0)
+//     customerNameController.addListener(() => formData.customerName = customerNameController.text);
+//     vehicleRegistrationController.addListener(() => formData.vehicleRegistration = vehicleRegistrationController.text);
+//     mileageController.addListener(() => formData.mileage = mileageController.text);
+//     dateOfInspectionController.addListener(() => formData.dateOfInspection = dateOfInspectionController.text);
+    
+//     // Comments field (Step 1)
+//     commentsController.addListener(() => formData.comments = commentsController.text);
 
 //     // Setup error handler for GetX navigation
 //     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -106,31 +120,44 @@
 //     });
 //   }
 
-//   // Safe navigation back method to handle snackbar issues
-// void _safeNavigateBack() {
-//   try {
-//     // Close any open dialog first
-//     if (Navigator.canPop(context)) {
-//       Navigator.pop(context);
-//     }
-    
-//     // Then check if we need to show exit confirmation
-//     if (stepController.currentStep.value == 0) {
-//       _showExitConfirmation();
-//     } else {
-//       stepController.previousStep();
-//     }
-//   } catch (e) {
-//     print('Error in safeNavigateBack: $e');
-//     Get.back();
+//   @override
+//   void dispose() {
+//     // Dispose all controllers
+//     customerNameController.dispose();
+//     vehicleRegistrationController.dispose();
+//     mileageController.dispose();
+//     dateOfInspectionController.dispose();
+//     commentsController.dispose();
+//     super.dispose();
 //   }
-// }
+
+//   // Safe navigation back method to handle snackbar issues
+//   void _safeNavigateBack() {
+//     try {
+//       // Close any open dialog first
+//       if (Navigator.canPop(context)) {
+//         Navigator.pop(context);
+//       }
+      
+//       // Then check if we need to show exit confirmation
+//       if (stepController.currentStep.value == 0) {
+//         _showExitConfirmation();
+//       } else {
+//         stepController.previousStep();
+//       }
+//     } catch (e) {
+//       print('Error in safeNavigateBack: $e');
+   
+//                       Get.back();
+//     }
+//   }
 
 //   void _collectFormData() {
 //     print('=== ENGINE VEHICLE SERVICE DATA ===');
 //     print('Customer Name: ${formData.customerName}');
 //     print('Vehicle Registration: ${formData.vehicleRegistration}');
 //     print('Mileage: ${formData.mileage}');
+//     print('Date of Inspection: ${formData.dateOfInspection}');
 //     print('Comments: ${formData.comments}');
 //     print('Mini Service Data: ${formData.miniServiceData}');
 //     print('Selected Values: $selectedValues');
@@ -177,10 +204,11 @@
 //               child: Row(
 //                 mainAxisAlignment: MainAxisAlignment.start,
 //                 children: [
-//                   IconButton(
-//                     icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-//                     onPressed: _safeNavigateBack,
-//                   ),
+//  // Update your IconButton in the build method:
+// IconButton(
+//   icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+//   onPressed: _showExitConfirmation, // Always show exit confirmation
+// ),
 //                   const Spacer(),
 //                   Container(
 //                     width: isSmallScreen ? 170 : 220,
@@ -721,25 +749,25 @@
 
 //           _buildTextFieldWithHint(
 //             'Enter* Customer Name',
-//             (value) => formData.customerName = value,
+//             customerNameController,
 //             isSmallScreen,
 //           ),
 //           const SizedBox(height: 16),
 //           _buildTextFieldWithHint(
 //             'Enter* Vehicle Registration',
-//             (value) => formData.vehicleRegistration = value,
+//             vehicleRegistrationController,
 //             isSmallScreen,
 //           ),
 //           const SizedBox(height: 16),
 //           _buildTextFieldWithHint(
 //             'Enter* Mileage',
-//             (value) => formData.mileage = value,
+//             mileageController,
 //             isSmallScreen,
 //           ),
 //           const SizedBox(height: 16),
 //           _buildTextFieldWithHint(
 //             'Enter* Date Of Inspection',
-//             (value) => formData.dateOfInspection = value,
+//             dateOfInspectionController,
 //             isSmallScreen,
 //           ),
 //         ],
@@ -821,35 +849,32 @@
 //                       ),
 //                       child: DropdownButtonHideUnderline(
 //                         child: DropdownButton<String>(
-//                           value:
-//                               selectedValues[cleanKey]?.isEmpty ?? true
-//                                   ? null
-//                                   : selectedValues[cleanKey],
+//                           value: selectedValues[cleanKey]?.isEmpty ?? true
+//                               ? null
+//                               : selectedValues[cleanKey],
 //                           icon: const Icon(Icons.keyboard_arrow_down, size: 18),
 //                           isExpanded: true,
-//                           items:
-//                               dropdownOptions.map((val) {
-//                                 return DropdownMenuItem(
-//                                   value: val,
-//                                   child: Center(
-//                                     child: Text(
-//                                       val,
-//                                       style: const TextStyle(
-//                                         fontFamily: "PolySans",
-//                                         fontSize: 14,
-//                                       ),
-//                                     ),
+//                           items: dropdownOptions.map((val) {
+//                             return DropdownMenuItem(
+//                               value: val,
+//                               child: Center(
+//                                 child: Text(
+//                                   val,
+//                                   style: const TextStyle(
+//                                     fontFamily: "PolySans",
+//                                     fontSize: 14,
 //                                   ),
-//                                 );
-//                               }).toList(),
-//                         // In your _buildMiniServiceSection method, update the dropdown onChanged:
-// onChanged: (value) {
-//   setState(() {
-//     selectedValues[cleanKey] = value!;
-//     // Also save to model immediately
-//     formData.setMainDropdownValue(cleanKey, value);
-//   });
-// },
+//                                 ),
+//                               ),
+//                             );
+//                           }).toList(),
+//                           onChanged: (value) {
+//                             setState(() {
+//                               selectedValues[cleanKey] = value!;
+//                               // Also save to model immediately
+//                               formData.setMainDropdownValue(cleanKey, value);
+//                             });
+//                           },
 //                         ),
 //                       ),
 //                     ),
@@ -891,158 +916,153 @@
 //               borderRadius: BorderRadius.circular(12),
 //               border: Border.all(color: Colors.grey.shade300),
 //             ),
-//             child:
-//                 _isUploading
-//                     ? Center(
-//                       child: Column(
-//                         mainAxisAlignment: MainAxisAlignment.center,
-//                         children: [
-//                           const CircularProgressIndicator(),
-//                           const SizedBox(height: 12),
-//                           Text(
-//                             "Uploading...",
-//                             style: TextStyle(
-//                               color: Colors.grey.shade600,
-//                               fontFamily: 'PolySans',
-//                             ),
-//                           ),
-//                         ],
-//                       ),
-//                     )
-//                     : Column(
+//             child: _isUploading
+//                 ? Center(
+//                     child: Column(
+//                       mainAxisAlignment: MainAxisAlignment.center,
 //                       children: [
-//                         Expanded(
-//                           child:
-//                               _selectedImages.isEmpty
-//                                   ? InkWell(
-//                                     onTap: _pickImage,
-//                                     child: Center(
-//                                       child: Column(
+//                         const CircularProgressIndicator(),
+//                         const SizedBox(height: 12),
+//                         Text(
+//                           "Uploading...",
+//                           style: TextStyle(
+//                             color: Colors.grey.shade600,
+//                             fontFamily: 'PolySans',
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   )
+//                 : Column(
+//                     children: [
+//                       Expanded(
+//                         child: _selectedImages.isEmpty
+//                             ? InkWell(
+//                                 onTap: _pickImage,
+//                                 child: Center(
+//                                   child: Column(
+//                                     mainAxisAlignment: MainAxisAlignment.center,
+//                                     children: [
+//                                       Row(
 //                                         mainAxisAlignment:
 //                                             MainAxisAlignment.center,
 //                                         children: [
-//                                           Row(
-//                                             mainAxisAlignment:
-//                                                 MainAxisAlignment.center,
-//                                             children: [
-//                                               Icon(
-//                                                 Icons.attach_file,
-//                                                 color: Colors.grey.shade600,
-//                                               ),
-//                                               SizedBox(width: 8),
-//                                               Text(
-//                                                 "Add* Attachments",
-//                                                 style: TextStyle(
-//                                                   color: Colors.grey.shade600,
-//                                                   fontFamily: 'PolySans',
-//                                                 ),
-//                                               ),
-//                                             ],
+//                                           Icon(
+//                                             Icons.attach_file,
+//                                             color: Colors.grey.shade600,
 //                                           ),
-//                                           const SizedBox(height: 4),
+//                                           SizedBox(width: 8),
 //                                           Text(
-//                                             "File Type: JPG, PNG, JPEG",
+//                                             "Add* Attachments",
 //                                             style: TextStyle(
-//                                               color: Colors.grey.shade500,
-//                                               fontSize: 11,
+//                                               color: Colors.grey.shade600,
 //                                               fontFamily: 'PolySans',
 //                                             ),
 //                                           ),
 //                                         ],
 //                                       ),
-//                                     ),
-//                                   )
-//                                   : GridView.builder(
-//                                     padding: const EdgeInsets.all(8),
-//                                     gridDelegate:
-//                                         const SliverGridDelegateWithFixedCrossAxisCount(
-//                                           crossAxisCount: 2,
-//                                           crossAxisSpacing: 8,
-//                                           mainAxisSpacing: 8,
+//                                       const SizedBox(height: 4),
+//                                       Text(
+//                                         "File Type: JPG, PNG, JPEG",
+//                                         style: TextStyle(
+//                                           color: Colors.grey.shade500,
+//                                           fontSize: 11,
+//                                           fontFamily: 'PolySans',
 //                                         ),
-//                                     itemCount: _selectedImages.length + 1,
-//                                     itemBuilder: (context, index) {
-//                                       if (index < _selectedImages.length) {
-//                                         return Stack(
-//                                           children: [
-//                                             ClipRRect(
-//                                               borderRadius:
-//                                                   BorderRadius.circular(8),
-//                                               child: Image.file(
-//                                                 _selectedImages[index],
-//                                                 fit: BoxFit.cover,
-//                                                 width: double.infinity,
-//                                                 height: double.infinity,
+//                                       ),
+//                                     ],
+//                                   ),
+//                                 ),
+//                               )
+//                             : GridView.builder(
+//                                 padding: const EdgeInsets.all(8),
+//                                 gridDelegate:
+//                                     const SliverGridDelegateWithFixedCrossAxisCount(
+//                                   crossAxisCount: 2,
+//                                   crossAxisSpacing: 8,
+//                                   mainAxisSpacing: 8,
+//                                 ),
+//                                 itemCount: _selectedImages.length + 1,
+//                                 itemBuilder: (context, index) {
+//                                   if (index < _selectedImages.length) {
+//                                     return Stack(
+//                                       children: [
+//                                         ClipRRect(
+//                                           borderRadius:
+//                                               BorderRadius.circular(8),
+//                                           child: Image.file(
+//                                             _selectedImages[index],
+//                                             fit: BoxFit.cover,
+//                                             width: double.infinity,
+//                                             height: double.infinity,
+//                                           ),
+//                                         ),
+//                                         Positioned(
+//                                           top: 4,
+//                                           right: 4,
+//                                           child: GestureDetector(
+//                                             onTap: () => _removeImage(index),
+//                                             child: Container(
+//                                               decoration: const BoxDecoration(
+//                                                 color: Colors.black54,
+//                                                 shape: BoxShape.circle,
 //                                               ),
-//                                             ),
-//                                             Positioned(
-//                                               top: 4,
-//                                               right: 4,
-//                                               child: GestureDetector(
-//                                                 onTap:
-//                                                     () => _removeImage(index),
-//                                                 child: Container(
-//                                                   decoration:
-//                                                       const BoxDecoration(
-//                                                         color: Colors.black54,
-//                                                         shape: BoxShape.circle,
-//                                                       ),
-//                                                   child: const Icon(
-//                                                     Icons.close,
-//                                                     color: Colors.white,
-//                                                     size: 16,
-//                                                   ),
-//                                                 ),
-//                                               ),
-//                                             ),
-//                                           ],
-//                                         );
-//                                       } else {
-//                                         return InkWell(
-//                                           onTap: _pickImage,
-//                                           child: Container(
-//                                             decoration: BoxDecoration(
-//                                               border: Border.all(
-//                                                 color: Colors.grey.shade300,
-//                                                 width: 2,
-//                                               ),
-//                                               borderRadius:
-//                                                   BorderRadius.circular(8),
-//                                             ),
-//                                             child: Center(
-//                                               child: Icon(
-//                                                 Icons.add,
-//                                                 size: 30,
-//                                                 color: Colors.grey.shade500,
+//                                               child: const Icon(
+//                                                 Icons.close,
+//                                                 color: Colors.white,
+//                                                 size: 16,
 //                                               ),
 //                                             ),
 //                                           ),
-//                                         );
-//                                       }
-//                                     },
-//                                   ),
-//                         ),
-//                         if (_selectedImages.isNotEmpty)
-//                           const Padding(
-//                             padding: EdgeInsets.all(8.0),
-//                             child: Text(
-//                               'photo(s) added',
-//                               style: TextStyle(
-//                                 color: Colors.grey,
-//                                 fontSize: 12,
-//                                 fontFamily: 'PolySans',
+//                                         ),
+//                                       ],
+//                                     );
+//                                   } else {
+//                                     return InkWell(
+//                                       onTap: _pickImage,
+//                                       child: Container(
+//                                         decoration: BoxDecoration(
+//                                           border: Border.all(
+//                                             color: Colors.grey.shade300,
+//                                             width: 2,
+//                                           ),
+//                                           borderRadius:
+//                                               BorderRadius.circular(8),
+//                                         ),
+//                                         child: Center(
+//                                           child: Icon(
+//                                             Icons.add,
+//                                             size: 30,
+//                                             color: Colors.grey.shade500,
+//                                           ),
+//                                         ),
+//                                       ),
+//                                     );
+//                                   }
+//                                 },
 //                               ),
+//                       ),
+//                       if (_selectedImages.isNotEmpty)
+//                         const Padding(
+//                           padding: EdgeInsets.all(8.0),
+//                           child: Text(
+//                             'photo(s) added',
+//                             style: TextStyle(
+//                               color: Colors.grey,
+//                               fontSize: 12,
+//                               fontFamily: 'PolySans',
 //                             ),
 //                           ),
-//                       ],
-//                     ),
+//                         ),
+//                     ],
+//                   ),
 //           ),
 //           const SizedBox(height: 20),
 
 //           // COMMENT FIELD
 //           TextField(
+//             controller: commentsController,
 //             maxLines: 6,
-//             onChanged: (value) => formData.comments = value,
 //             decoration: InputDecoration(
 //               hintText: "Enter* Comments (Optional)",
 //               hintStyle: TextStyle(
@@ -1095,7 +1115,7 @@
 
 //   Widget _buildTextFieldWithHint(
 //     String hint,
-//     Function(String) onChanged,
+//     TextEditingController controller,
 //     bool isSmallScreen,
 //   ) {
 //     return Container(
@@ -1106,6 +1126,7 @@
 //         border: Border.all(color: Colors.grey.shade300),
 //       ),
 //       child: TextFormField(
+//         controller: controller,
 //         decoration: InputDecoration(
 //           hintText: hint,
 //           border: InputBorder.none,
@@ -1124,228 +1145,227 @@
 //           fontSize: isSmallScreen ? 14 : 16,
 //           fontFamily: 'PolySans',
 //         ),
-//         onChanged: onChanged,
 //       ),
 //     );
 //   }
 
-// void _showSelectionPopup(String fieldName) {
-//   String cleanFieldName = fieldName.replaceAll('*', '').trim();
+//   void _showSelectionPopup(String fieldName) {
+//     String cleanFieldName = fieldName.replaceAll('*', '').trim();
 
-//   Map<String, List<String>> fieldOptions = {
-//     'Parts Included': ['Engine Oil', 'Oil Filter'],
-//     'Top-ups Included': [
-//       'Windscreen Additive',
-//       'Coolant',
-//       'Brake Fluid',
-//       'Power Steering Fluid',
-//     ],
-//     'General Checks': ['External Lights', 'Instrument warning'],
-//     'Internal/Vision': ['Condition of Windscreen', 'Wiper and Washers'],
-//     'Engine': ['General Oil Leaks', 'Antifreeze Strength', 'Timing Belt'],
-//     'Brake': ['Visual Check of brake pads'],
-//     'Wheels & Tyres': ['Tyre Condition', 'Tyre Pressure'],
-//     'Steering & Suspension': ['Steering Rack condition'],
-//     'Exhaust': ['Exhaust condition'],
-//     'Drive System': ['Clutch Fluid level', 'Transmission oil'],
-//   };
+//     Map<String, List<String>> fieldOptions = {
+//       'Parts Included': ['Engine Oil', 'Oil Filter'],
+//       'Top-ups Included': [
+//         'Windscreen Additive',
+//         'Coolant',
+//         'Brake Fluid',
+//         'Power Steering Fluid',
+//       ],
+//       'General Checks': ['External Lights', 'Instrument warning'],
+//       'Internal/Vision': ['Condition of Windscreen', 'Wiper and Washers'],
+//       'Engine': ['General Oil Leaks', 'Antifreeze Strength', 'Timing Belt'],
+//       'Brake': ['Visual Check of brake pads'],
+//       'Wheels & Tyres': ['Tyre Condition', 'Tyre Pressure'],
+//       'Steering & Suspension': ['Steering Rack condition'],
+//       'Exhaust': ['Exhaust condition'],
+//       'Drive System': ['Clutch Fluid level', 'Transmission oil'],
+//     };
 
-//   List<String> options = fieldOptions[cleanFieldName] ?? ['Check 1', 'Check 2', 'Check 3'];
+//     List<String> options = fieldOptions[cleanFieldName] ?? ['Check 1', 'Check 2', 'Check 3'];
 
-//   Map<String, String> tempSelections = {};
-//   final currentData = formData.miniServiceData[cleanFieldName] ?? {};
-//   for (var option in options) {
-//     if (currentData.containsKey(option)) {
-//       tempSelections[option] = currentData[option]!;
+//     Map<String, String> tempSelections = {};
+//     final currentData = formData.miniServiceData[cleanFieldName] ?? {};
+//     for (var option in options) {
+//       if (currentData.containsKey(option)) {
+//         tempSelections[option] = currentData[option]!;
+//       }
 //     }
-//   }
 
-//   showDialog(
-//     context: context,
-//     barrierDismissible: false,
-//     builder: (context) {
-//       return StatefulBuilder(
-//         builder: (context, setModalState) {
-//           return Dialog(
-//             shape: RoundedRectangleBorder(
-//               borderRadius: BorderRadius.circular(12),
-//             ),
-//             insetPadding: const EdgeInsets.all(20),
-//             child: Container(
-//               padding: const EdgeInsets.all(20),
-//               decoration: BoxDecoration(
-//                 color: Colors.white,
+//     showDialog(
+//       context: context,
+//       barrierDismissible: false,
+//       builder: (context) {
+//         return StatefulBuilder(
+//           builder: (context, setModalState) {
+//             return Dialog(
+//               shape: RoundedRectangleBorder(
 //                 borderRadius: BorderRadius.circular(12),
 //               ),
-//               child: Column(
-//                 mainAxisSize: MainAxisSize.min,
-//                 crossAxisAlignment: CrossAxisAlignment.start,
-//                 children: [
-//                   Row(
-//                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                     children: [
-//                       Text(
-//                         "Select Options",
-//                         style: TextStyle(
-//                           fontSize: 18,
-//                           fontFamily: "PolySans",
-//                           fontWeight: FontWeight.w600,
+//               insetPadding: const EdgeInsets.all(20),
+//               child: Container(
+//                 padding: const EdgeInsets.all(20),
+//                 decoration: BoxDecoration(
+//                   color: Colors.white,
+//                   borderRadius: BorderRadius.circular(12),
+//                 ),
+//                 child: Column(
+//                   mainAxisSize: MainAxisSize.min,
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Row(
+//                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                       children: [
+//                         const Text(
+//                           "Select Options",
+//                           style: TextStyle(
+//                             fontSize: 18,
+//                             fontFamily: "PolySans",
+//                             fontWeight: FontWeight.w600,
+//                           ),
 //                         ),
-//                       ),
-//                       IconButton(
-//                         icon: Icon(Icons.close, size: 22),
-//                         onPressed: () => Navigator.pop(context),
-//                       ),
-//                     ],
-//                   ),
-//                   // const SizedBox(height: 10),
-//                   // Text(
-//                   //   "Select values for each item:",
-//                   //   style: TextStyle(
-//                   //     fontSize: 14,
-//                   //     fontFamily: "PolySans",
-//                   //     color: Colors.grey.shade700,
-//                   //   ),
-//                   // ),
-//                   const SizedBox(height: 15),
+//                         IconButton(
+//                           icon: Icon(Icons.close, size: 22),
+//                           onPressed: () => Navigator.pop(context),
+//                         ),
+//                       ],
+//                     ),
+//                     // const SizedBox(height: 10),
+//                     // Text(
+//                     //   "Select values for each item:",
+//                     //   style: TextStyle(
+//                     //     fontSize: 14,
+//                     //     fontFamily: "PolySans",
+//                     //     color: Colors.grey.shade700,
+//                     //   ),
+//                     // ),
+//                     const SizedBox(height: 15),
 
-//                   ...options.map((option) {
-//                     return Padding(
-//                       padding: const EdgeInsets.only(bottom: 12),
-//                       child: Row(
-//                         children: [
-//                           Expanded(
-//                             child: Text(
-//                               option,
-//                               style: TextStyle(
-//                                 fontFamily: "PolySans",
-//                                 fontSize: 14,
-//                                 fontWeight: FontWeight.w500,
+//                     ...options.map((option) {
+//                       return Padding(
+//                         padding: const EdgeInsets.only(bottom: 12),
+//                         child: Row(
+//                           children: [
+//                             Expanded(
+//                               child: Text(
+//                                 option,
+//                                 style: const TextStyle(
+//                                   fontFamily: "PolySans",
+//                                   fontSize: 14,
+//                                   fontWeight: FontWeight.w500,
+//                                 ),
 //                               ),
 //                             ),
-//                           ),
-//                           const SizedBox(width: 10),
-//                           Container(
-//                             width: 80,
-//                             height: 40,
-//                             decoration: BoxDecoration(
-//                               color: Colors.white,
-//                               borderRadius: BorderRadius.circular(8),
-//                               border: Border.all(color: Colors.grey.shade300),
-//                             ),
-//                             child: DropdownButtonHideUnderline(
-//                               child: DropdownButton<String>(
-//                                 value: tempSelections[option]?.isNotEmpty == true 
-//                                     ? tempSelections[option] 
-//                                     : null,
-//                                 hint: Padding(
-//                                   padding: EdgeInsets.symmetric(horizontal: 8),
-//                                   child: Text(
-//                                     "Select",
-//                                     style: TextStyle(
-//                                       fontSize: 12,
-//                                       color: Colors.grey.shade600,
-//                                       fontFamily: "PolySans",
-//                                     ),
-//                                   ),
-//                                 ),
-//                                 isExpanded: true,
-//                                 items: dropdownOptions.map((String value) {
-//                                   return DropdownMenuItem<String>(
-//                                     value: value,
-//                                     child: Center(
-//                                       child: Text(
-//                                         value,
-//                                         style: TextStyle(
-//                                           fontFamily: "PolySans",
-//                                           fontSize: 12,
-//                                           fontWeight: FontWeight.w500,
-//                                         ),
+//                             const SizedBox(width: 10),
+//                             Container(
+//                               width: 80,
+//                               height: 40,
+//                               decoration: BoxDecoration(
+//                                 color: Colors.white,
+//                                 borderRadius: BorderRadius.circular(8),
+//                                 border: Border.all(color: Colors.grey.shade300),
+//                               ),
+//                               child: DropdownButtonHideUnderline(
+//                                 child: DropdownButton<String>(
+//                                   value: tempSelections[option]?.isNotEmpty == true 
+//                                       ? tempSelections[option] 
+//                                       : null,
+//                                   hint: Padding(
+//                                     padding: EdgeInsets.symmetric(horizontal: 8),
+//                                     child: Text(
+//                                       "Select",
+//                                       style: TextStyle(
+//                                         fontSize: 12,
+//                                         color: Colors.grey.shade600,
+//                                         fontFamily: "PolySans",
 //                                       ),
 //                                     ),
-//                                   );
-//                                 }).toList(),
-//                                 onChanged: (String? newValue) {
-//                                   setModalState(() {
-//                                     if (newValue == null) {
-//                                       tempSelections.remove(option);
-//                                     } else {
-//                                       tempSelections[option] = newValue;
-//                                     }
-//                                   });
-//                                 },
+//                                   ),
+//                                   isExpanded: true,
+//                                   items: dropdownOptions.map((String value) {
+//                                     return DropdownMenuItem<String>(
+//                                       value: value,
+//                                       child: Center(
+//                                         child: Text(
+//                                           value,
+//                                           style: const TextStyle(
+//                                             fontFamily: "PolySans",
+//                                             fontSize: 12,
+//                                             fontWeight: FontWeight.w500,
+//                                           ),
+//                                         ),
+//                                       ),
+//                                     );
+//                                   }).toList(),
+//                                   onChanged: (String? newValue) {
+//                                     setModalState(() {
+//                                       if (newValue == null) {
+//                                         tempSelections.remove(option);
+//                                       } else {
+//                                         tempSelections[option] = newValue;
+//                                       }
+//                                     });
+//                                   },
+//                                 ),
 //                               ),
 //                             ),
-//                           ),
-//                         ],
-//                       ),
-//                     );
-//                   }).toList(),
-//                   const SizedBox(height: 18),
-
-//                   SizedBox(
-//                     width: double.infinity,
-//                     child: ElevatedButton(
-//                       onPressed: () {
-//                         // Save detailed items data (action button selections)
-//                         formData.addMiniServiceData(
-//                           cleanFieldName,
-//                           Map.from(tempSelections),
-//                         );
-                        
-//                         // DO NOT change the main dropdown value - keep what user selected
-//                         // The main dropdown value is already stored in selectedValues[cleanFieldName]
-//                         // and should be saved separately to formData.mainDropdownValues
-                        
-//                         // Save main dropdown value if it exists
-//                         String mainDropdownValue = selectedValues[cleanFieldName] ?? "";
-//                         if (mainDropdownValue.isNotEmpty) {
-//                           formData.setMainDropdownValue(cleanFieldName, mainDropdownValue);
-//                         }
-
-//                         Navigator.pop(context);
-//                       },
-//                       style: ElevatedButton.styleFrom(
-//                         backgroundColor: const Color(0xff173EA6),
-//                         padding: const EdgeInsets.symmetric(vertical: 14),
-//                         shape: RoundedRectangleBorder(
-//                           borderRadius: BorderRadius.circular(8),
+//                           ],
 //                         ),
-//                       ),
-//                       child: Text(
-//                         "Save",
-//                         style: TextStyle(
-//                           fontFamily: "PolySans",
-//                           fontSize: 16,
-//                           fontWeight: FontWeight.bold,
-//                           color: Colors.white,
+//                       );
+//                     }).toList(),
+//                     const SizedBox(height: 18),
+
+//                     SizedBox(
+//                       width: double.infinity,
+//                       child: ElevatedButton(
+//                         onPressed: () {
+//                           // Save detailed items data (action button selections)
+//                           formData.addMiniServiceData(
+//                             cleanFieldName,
+//                             Map.from(tempSelections),
+//                           );
+                          
+//                           // DO NOT change the main dropdown value - keep what user selected
+//                           // The main dropdown value is already stored in selectedValues[cleanFieldName]
+//                           // and should be saved separately to formData.mainDropdownValues
+                          
+//                           // Save main dropdown value if it exists
+//                           String mainDropdownValue = selectedValues[cleanFieldName] ?? "";
+//                           if (mainDropdownValue.isNotEmpty) {
+//                             formData.setMainDropdownValue(cleanFieldName, mainDropdownValue);
+//                           }
+
+//                           Navigator.pop(context);
+//                         },
+//                         style: ElevatedButton.styleFrom(
+//                           backgroundColor: const Color(0xff173EA6),
+//                           padding: const EdgeInsets.symmetric(vertical: 14),
+//                           shape: RoundedRectangleBorder(
+//                             borderRadius: BorderRadius.circular(8),
+//                           ),
+//                         ),
+//                         child: const Text(
+//                           "Save",
+//                           style: TextStyle(
+//                             fontFamily: "PolySans",
+//                             fontSize: 16,
+//                             fontWeight: FontWeight.bold,
+//                             color: Colors.white,
+//                           ),
 //                         ),
 //                       ),
 //                     ),
-//                   ),
-//                 ],
+//                   ],
+//                 ),
 //               ),
-//             ),
-//           );
-//         },
-//       );
-//     },
-//   );
-// }
+//             );
+//           },
+//         );
+//       },
+//     );
+//   }
 
-//  void _showExitConfirmation() {
+//   void _showExitConfirmation() {
 //   showDialog(
 //     context: context,
 //     barrierDismissible: true,
 //     builder: (context) => AlertDialog(
 //       title: Text('Exit Form?', style: TextStyle(fontFamily: 'PolySans')),
-//       content: Text(
+//       content: const Text(
 //         'Are you sure you want to go back? Your progress may not be saved.',
 //         style: TextStyle(fontFamily: 'PolySans'),
 //       ),
 //       actions: [
 //         TextButton(
-//           onPressed: () => Navigator.pop(context),
+//           onPressed: () => Navigator.pop(context), // Just close dialog
 //           child: Text(
 //             'Cancel',
 //             style: TextStyle(
@@ -1356,8 +1376,10 @@
 //         ),
 //         TextButton(
 //           onPressed: () {
+//             // First close the dialog
 //             Navigator.pop(context);
-//             Get.back();
+//             // Then exit the form page
+//             Navigator.pop(context);
 //           },
 //           child: Text(
 //             'Exit',
@@ -1410,8 +1432,7 @@
 
 //       await Printing.sharePdf(
 //         bytes: pdfBytes,
-//         filename:
-//             'mini-vehicle-service.pdf',
+//         filename: 'mini-vehicle-service.pdf',
 //       );
 
 //       Get.snackbar(
@@ -1432,22 +1453,20 @@
 
 //       showDialog(
 //         context: context,
-//         builder:
-//             (context) => AlertDialog(
-//               title: const Text('Export Error'),
-//               content: Text('Failed to generate PDF: $e'),
-//               actions: [
-//                 TextButton(
-//                   onPressed: () => Navigator.pop(context),
-//                   child: const Text('OK'),
-//                 ),
-//               ],
+//         builder: (context) => AlertDialog(
+//           title: const Text('Export Error'),
+//           content: Text('Failed to generate PDF: $e'),
+//           actions: [
+//             TextButton(
+//               onPressed: () => Navigator.pop(context),
+//               child: const Text('OK'),
 //             ),
+//           ],
+//         ),
 //       );
 //     }
 //   }
 // }
-
 
 import 'dart:typed_data';
 import 'package:data/models/engine_vehicle_model.dart';
@@ -1459,14 +1478,15 @@ import 'package:image_picker/image_picker.dart';
 import 'package:printing/printing.dart';
 import 'dart:io';
 
+// Updated controller for 4 steps total (0-3)
 class EngineVehicleStepController extends GetxController {
   var currentStep = 0.obs;
   var stepStatus = <int, String>{}.obs; // Track step status
   var isViewingFromSummary = false.obs; // Track if viewing from summary
 
   void nextStep() {
-    if (currentStep.value < 2) {
-      // Now 3 steps: 0, 1, 2 (summary)
+    if (currentStep.value < 3) {
+      // Now 4 steps: 0, 1, 2, 3 (summary)
       currentStep.value++;
     }
   }
@@ -1478,7 +1498,7 @@ class EngineVehicleStepController extends GetxController {
   }
 
   void goToStep(int step) {
-    if (step >= 0 && step <= 2) {
+    if (step >= 0 && step <= 3) {
       currentStep.value = step;
     }
   }
@@ -1515,23 +1535,34 @@ class _EngineVehicleServiceFormState extends State<EngineVehicleServiceForm> {
   // Image picker instance
   final ImagePicker _imagePicker = ImagePicker();
 
-  // For image uploads
-  List<File> _selectedImages = [];
+  // For Step 0: Single image upload (Main Information)
+  File? _selectedImage;
   bool _isUploading = false;
+  
+  // For Step 2: Multiple images upload (Mini Service Form)
+  List<File> _selectedImages = [];
 
-  final List<String> stepTitles = ['Customer Information', 'Mini Service Form'];
+  final List<String> stepTitles = [
+    'Main Information',         // Step 0
+    'Customer Information',     // Step 1
+    'Mini Service Form'         // Step 2
+  ];
 
   Map<String, String> selectedValues = {};
   List<String> dropdownOptions = ["P", "F", "N/A", "R"];
 
   // Text editing controllers for all text fields
-  // Customer Information (Step 0)
+  // Main Information (Step 0)
+  late TextEditingController workshopNameController;
+  late TextEditingController jobReferenceController;
+  
+  // Customer Information (Step 1)
   late TextEditingController customerNameController;
   late TextEditingController vehicleRegistrationController;
   late TextEditingController mileageController;
   late TextEditingController dateOfInspectionController;
   
-  // Comments field (Step 1)
+  // Comments field (Step 2)
   late TextEditingController commentsController;
 
   @override
@@ -1543,23 +1574,31 @@ class _EngineVehicleServiceFormState extends State<EngineVehicleServiceForm> {
     }
 
     // Initialize text controllers with formData values
-    // Customer Information (Step 0)
+    // Main Information (Step 0)
+    workshopNameController = TextEditingController(text: formData.workshopName);
+    jobReferenceController = TextEditingController(text: formData.jobReference);
+    
+    // Customer Information (Step 1)
     customerNameController = TextEditingController(text: formData.customerName);
     vehicleRegistrationController = TextEditingController(text: formData.vehicleRegistration);
     mileageController = TextEditingController(text: formData.mileage);
     dateOfInspectionController = TextEditingController(text: formData.dateOfInspection);
     
-    // Comments field (Step 1)
+    // Comments field (Step 2)
     commentsController = TextEditingController(text: formData.comments);
     
     // Add listeners to update formData when text changes
-    // Customer Information (Step 0)
+    // Main Information (Step 0)
+    workshopNameController.addListener(() => formData.workshopName = workshopNameController.text);
+    jobReferenceController.addListener(() => formData.jobReference = jobReferenceController.text);
+    
+    // Customer Information (Step 1)
     customerNameController.addListener(() => formData.customerName = customerNameController.text);
     vehicleRegistrationController.addListener(() => formData.vehicleRegistration = vehicleRegistrationController.text);
     mileageController.addListener(() => formData.mileage = mileageController.text);
     dateOfInspectionController.addListener(() => formData.dateOfInspection = dateOfInspectionController.text);
     
-    // Comments field (Step 1)
+    // Comments field (Step 2)
     commentsController.addListener(() => formData.comments = commentsController.text);
 
     // Setup error handler for GetX navigation
@@ -1574,6 +1613,8 @@ class _EngineVehicleServiceFormState extends State<EngineVehicleServiceForm> {
   @override
   void dispose() {
     // Dispose all controllers
+    workshopNameController.dispose();
+    jobReferenceController.dispose();
     customerNameController.dispose();
     vehicleRegistrationController.dispose();
     mileageController.dispose();
@@ -1598,13 +1639,14 @@ class _EngineVehicleServiceFormState extends State<EngineVehicleServiceForm> {
       }
     } catch (e) {
       print('Error in safeNavigateBack: $e');
-   
-                      Get.back();
+      Get.back();
     }
   }
 
   void _collectFormData() {
     print('=== ENGINE VEHICLE SERVICE DATA ===');
+    print('Workshop Name: ${formData.workshopName}');
+    print('Job Reference: ${formData.jobReference}');
     print('Customer Name: ${formData.customerName}');
     print('Vehicle Registration: ${formData.vehicleRegistration}');
     print('Mileage: ${formData.mileage}');
@@ -1612,12 +1654,59 @@ class _EngineVehicleServiceFormState extends State<EngineVehicleServiceForm> {
     print('Comments: ${formData.comments}');
     print('Mini Service Data: ${formData.miniServiceData}');
     print('Selected Values: $selectedValues');
+    print('Main Image: ${_selectedImage != null}');
     print('Selected Images: ${_selectedImages.length}');
     print('======================');
   }
 
   // ==================== IMAGE PICKING METHODS ====================
-  Future<void> _pickImage() async {
+  // Step 0: Single Image Upload (Main Information)
+  Future<void> _pickSingleImage() async {
+    try {
+      setState(() {
+        _isUploading = true;
+      });
+
+      final XFile? image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 800,
+        maxHeight: 800,
+      );
+
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+          _isUploading = false;
+        });
+      } else {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    } catch (e) {
+      print('Error picking single image: $e');
+      setState(() {
+        _isUploading = false;
+      });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to pick image: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _removeSingleImage() {
+    setState(() {
+      _selectedImage = null;
+    });
+  }
+
+  // Step 2: Multiple Images Upload (Mini Service Form)
+  Future<void> _pickMultipleImages() async {
     try {
       final XFile? image = await _imagePicker.pickImage(
         source: ImageSource.gallery,
@@ -1655,11 +1744,11 @@ class _EngineVehicleServiceFormState extends State<EngineVehicleServiceForm> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
- // Update your IconButton in the build method:
-IconButton(
-  icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-  onPressed: _showExitConfirmation, // Always show exit confirmation
-),
+                  // Update your IconButton in the build method:
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
+                    onPressed: _showExitConfirmation, // Always show exit confirmation
+                  ),
                   const Spacer(),
                   Container(
                     width: isSmallScreen ? 170 : 220,
@@ -1693,7 +1782,7 @@ IconButton(
                     Expanded(child: Container(height: 1, color: Colors.black)),
                     const SizedBox(width: 10),
                     Text(
-                      stepController.currentStep.value == 2
+                      stepController.currentStep.value == 3
                           ? '(SUMMARY)'
                           : '(STEP ${stepController.currentStep.value + 1} OF ${stepTitles.length})',
                       style: TextStyle(
@@ -1715,7 +1804,7 @@ IconButton(
                 color: const Color(0xFFF8F8F8),
                 child: Obx(() {
                   int currentStep = stepController.currentStep.value;
-                  if (currentStep == 2) {
+                  if (currentStep == 3) {
                     return _buildSummaryScreen(isSmallScreen);
                   }
                   return _buildStepContent(currentStep, width);
@@ -1729,7 +1818,7 @@ IconButton(
               int currentStep = stepController.currentStep.value;
 
               // If viewing from summary, show simplified buttons
-              if (isViewingFromSummary && currentStep < 2) {
+              if (isViewingFromSummary && currentStep < 3) {
                 return Container(
                   padding: const EdgeInsets.all(20),
                   color: const Color(0xFFF8F8F8),
@@ -1741,7 +1830,7 @@ IconButton(
                         child: OutlinedButton(
                           onPressed: () {
                             stepController.setViewingFromSummary(false);
-                            stepController.goToStep(2);
+                            stepController.goToStep(3);
                           },
                           style: OutlinedButton.styleFrom(
                             foregroundColor: Colors.black,
@@ -1784,7 +1873,7 @@ IconButton(
                           onPressed: () {
                             stepController.markStepAsFilled(currentStep);
                             stepController.setViewingFromSummary(false);
-                            stepController.goToStep(2);
+                            stepController.goToStep(3);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xff173EA6),
@@ -1822,7 +1911,7 @@ IconButton(
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        if (currentStep > 0 && currentStep < 2)
+                        if (currentStep > 0 && currentStep < 3)
                           OutlinedButton(
                             onPressed: stepController.previousStep,
                             style: OutlinedButton.styleFrom(
@@ -1891,7 +1980,7 @@ IconButton(
                         else
                           Container(),
 
-                        if (currentStep < 1) // Skip only for first step
+                        if (currentStep < 2) // Skip only for first two steps
                           OutlinedButton(
                             onPressed: () {
                               stepController.markStepAsSkipped(currentStep);
@@ -1924,7 +2013,7 @@ IconButton(
 
                     const SizedBox(height: 12),
 
-                    if (currentStep < 1)
+                    if (currentStep < 2)
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -1954,13 +2043,13 @@ IconButton(
                           ),
                         ),
                       )
-                    else if (currentStep == 1)
+                    else if (currentStep == 2)
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
                           onPressed: () {
-                            stepController.markStepAsFilled(1);
-                            stepController.goToStep(2);
+                            stepController.markStepAsFilled(2);
+                            stepController.goToStep(3);
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xff173EA6),
@@ -2024,7 +2113,7 @@ IconButton(
                 child: OutlinedButton(
                   onPressed: () {
                     stepController.setViewingFromSummary(false);
-                    stepController.goToStep(1);
+                    stepController.goToStep(2);
                   },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Colors.black),
@@ -2099,7 +2188,7 @@ IconButton(
     bool isFilled = stepController.stepStatus[index] == "Filled";
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
       decoration: BoxDecoration(
         color: isFilled ? const Color(0xff173EA6) : Colors.white,
         borderRadius: BorderRadius.circular(6),
@@ -2115,8 +2204,18 @@ IconButton(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // Text(
+                //   "STEP ${index + 1}",
+                //   style: TextStyle(
+                //     fontSize: isSmallScreen ? 14 : 15,
+                //     fontWeight: FontWeight.w700,
+                //     fontFamily: "PolySans",
+                //     color: isFilled ? Colors.white : Colors.black,
+                //   ),
+                // ),
+                // const SizedBox(width: 16),
                 Text(
-                  "STEP ${index + 1}",
+                  stepTitles[index],
                   style: TextStyle(
                     fontSize: isSmallScreen ? 16 : 17,
                     fontWeight: FontWeight.w700,
@@ -2124,7 +2223,7 @@ IconButton(
                     color: isFilled ? Colors.white : Colors.black,
                   ),
                 ),
-                const SizedBox(width: 50),
+                const SizedBox(width: 16),
                 Text(
                   isFilled ? "(Filled)" : "(Skipped)",
                   style: TextStyle(
@@ -2174,12 +2273,202 @@ IconButton(
 
     switch (step) {
       case 0:
-        return _buildCustomerInfoSection(isSmallScreen);
+        return _buildMainInformationSection(isSmallScreen);
       case 1:
+        return _buildCustomerInfoSection(isSmallScreen);
+      case 2:
         return _buildMiniServiceSection(isSmallScreen);
       default:
         return Container();
     }
+  }
+
+  // ==================== STEP 0: MAIN INFORMATION ====================
+  Widget _buildMainInformationSection(bool isSmallScreen) {
+    return _buildFormContainer(
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Main Information',
+            style: TextStyle(
+              fontSize: isSmallScreen ? 20 : 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+              fontFamily: 'PolySans',
+            ),
+          ),
+          const SizedBox(height: 25),
+
+          // Upload Box with Single Image Preview
+          Container(
+            height: 160,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: _isUploading
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 12),
+                        Text(
+                          "Uploading...",
+                          style: TextStyle(
+                            color: Colors.grey.shade600,
+                            fontFamily: 'PolySans',
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : InkWell(
+                    onTap: _pickSingleImage,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Center(
+                      child: _selectedImage != null
+                          ? Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Image.file(
+                                    _selectedImage!,
+                                    width: 120,
+                                    height: 120,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: Container(
+                                    decoration: const BoxDecoration(
+                                      color: Colors.black54,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: IconButton(
+                                      icon: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 16,
+                                      ),
+                                      onPressed: _removeSingleImage,
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(
+                                        minWidth: 24,
+                                        minHeight: 24,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.attach_file,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      "Add* Attachments",
+                                      style: TextStyle(
+                                        color: Colors.grey.shade600,
+                                        fontFamily: 'PolySans',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  "File Type: JPG, PNG, JPEG",
+                                  style: TextStyle(
+                                    color: Colors.grey.shade500,
+                                    fontSize: 11,
+                                    fontFamily: 'PolySans',
+                                  ),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+          ),
+
+          const SizedBox(height: 20),
+
+          // Workshop Name & Address
+          Container(
+            height: isSmallScreen ? 50 : 55,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: TextFormField(
+              controller: workshopNameController,
+              decoration: InputDecoration(
+                hintText: 'Enter* Workshop Name & Address',
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                isDense: true,
+                hintStyle: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: isSmallScreen ? 12 : 14,
+                  fontFamily: 'PolySans',
+                ),
+              ),
+              style: TextStyle(
+                fontSize: isSmallScreen ? 12 : 14,
+                fontFamily: 'PolySans',
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Job Reference/Date
+          Container(
+            height: isSmallScreen ? 50 : 55,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey.shade300),
+            ),
+            child: TextFormField(
+              controller: jobReferenceController,
+              decoration: InputDecoration(
+                hintText: 'Enter* Job Reference/Date',
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                isDense: true,
+                hintStyle: TextStyle(
+                  color: Colors.grey.shade600,
+                  fontSize: isSmallScreen ? 14 : 16,
+                  fontFamily: 'PolySans',
+                ),
+              ),
+              style: TextStyle(
+                fontSize: isSmallScreen ? 14 : 16,
+                fontFamily: 'PolySans',
+              ),
+            ),
+          ),
+        ],
+      ),
+      isSmallScreen,
+    );
   }
 
   Widget _buildCustomerInfoSection(bool isSmallScreen) {
@@ -2389,7 +2678,7 @@ IconButton(
                       Expanded(
                         child: _selectedImages.isEmpty
                             ? InkWell(
-                                onTap: _pickImage,
+                                onTap: _pickMultipleImages,
                                 child: Center(
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -2470,7 +2759,7 @@ IconButton(
                                     );
                                   } else {
                                     return InkWell(
-                                      onTap: _pickImage,
+                                      onTap: _pickMultipleImages,
                                       child: Container(
                                         decoration: BoxDecoration(
                                           border: Border.all(
@@ -2669,15 +2958,6 @@ IconButton(
                         ),
                       ],
                     ),
-                    // const SizedBox(height: 10),
-                    // Text(
-                    //   "Select values for each item:",
-                    //   style: TextStyle(
-                    //     fontSize: 14,
-                    //     fontFamily: "PolySans",
-                    //     color: Colors.grey.shade700,
-                    //   ),
-                    // ),
                     const SizedBox(height: 15),
 
                     ...options.map((option) {
@@ -2805,45 +3085,45 @@ IconButton(
   }
 
   void _showExitConfirmation() {
-  showDialog(
-    context: context,
-    barrierDismissible: true,
-    builder: (context) => AlertDialog(
-      title: Text('Exit Form?', style: TextStyle(fontFamily: 'PolySans')),
-      content: const Text(
-        'Are you sure you want to go back? Your progress may not be saved.',
-        style: TextStyle(fontFamily: 'PolySans'),
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => AlertDialog(
+        title: Text('Exit Form?', style: TextStyle(fontFamily: 'PolySans')),
+        content: const Text(
+          'Are you sure you want to go back? Your progress may not be saved.',
+          style: TextStyle(fontFamily: 'PolySans'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context), // Just close dialog
+            child: Text(
+              'Cancel',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontFamily: 'PolySans',
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              // First close the dialog
+              Navigator.pop(context);
+              // Then exit the form page
+              Navigator.pop(context);
+            },
+            child: const Text(
+              'Exit',
+              style: TextStyle(
+                color: Color(0xff173EA6),
+                fontFamily: 'PolySans',
+              ),
+            ),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context), // Just close dialog
-          child: Text(
-            'Cancel',
-            style: TextStyle(
-              color: Colors.grey.shade600,
-              fontFamily: 'PolySans',
-            ),
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            // First close the dialog
-            Navigator.pop(context);
-            // Then exit the form page
-            Navigator.pop(context);
-          },
-          child: Text(
-            'Exit',
-            style: TextStyle(
-              color: const Color(0xff173EA6),
-              fontFamily: 'PolySans',
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
+    );
+  }
 
   void _exportToPdf() async {
     try {
@@ -2856,7 +3136,17 @@ IconButton(
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
-      // Add image bytes to formData
+      // Add main image (from Step 0) to formData
+      Uint8List? mainImageBytes;
+      if (_selectedImage != null) {
+        try {
+          mainImageBytes = await _selectedImage!.readAsBytes();
+        } catch (e) {
+          print('Error reading main image bytes: $e');
+        }
+      }
+
+      // Add multiple images (from Step 2) to formData
       List<Uint8List> imageBytesList = [];
       for (var image in _selectedImages) {
         try {
@@ -2869,6 +3159,11 @@ IconButton(
 
       final ByteData byteData = await rootBundle.load('assets/images/logo.png');
       final Uint8List logoBytes = byteData.buffer.asUint8List();
+
+      // Update formData with main information
+      formData.workshopName = workshopNameController.text;
+      formData.jobReference = jobReferenceController.text;
+      formData.mainImageBytes = mainImageBytes;
 
       final pdfBytes = await EngineVehiclePdfService.generatePdf(
         formData,

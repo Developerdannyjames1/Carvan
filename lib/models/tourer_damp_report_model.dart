@@ -18,16 +18,26 @@ class TourerDampModel {
 
   // Step 2: Damp Readings
   String commentsRecommendations = '';
-  
-  // Steps 3-8: Photo sections (Motorhome-style)
+
+   // Add numbering data for photo sections
   Map<String, Map<String, dynamic>> photoData = {
-    'Front': {'attachedFile': '', 'attachedFileBytes': null, 'comments': ''},
-    'Rear': {'attachedFile': '', 'attachedFileBytes': null, 'comments': ''},
-    'Nearside': {'attachedFile': '', 'attachedFileBytes': null, 'comments': ''},
-    'Offside': {'attachedFile': '', 'attachedFileBytes': null, 'comments': ''},
-    'Ceiling': {'attachedFile': '', 'attachedFileBytes': null, 'comments': ''},
-    'Floor': {'attachedFile': '', 'attachedFileBytes': null, 'comments': ''},
+    'Front': {'attachedFile': '', 'attachedFileBytes': null, 'comments': '', 'number': ''},
+    'Rear': {'attachedFile': '', 'attachedFileBytes': null, 'comments': '', 'number': ''},
+    'Nearside': {'attachedFile': '', 'attachedFileBytes': null, 'comments': '', 'number': ''},
+    'Offside': {'attachedFile': '', 'attachedFileBytes': null, 'comments': '', 'number': ''},
+    'Ceiling': {'attachedFile': '', 'attachedFileBytes': null, 'comments': '', 'number': ''},
+    'Floor': {'attachedFile': '', 'attachedFileBytes': null, 'comments': '', 'number': ''},
   };
+  
+  // // Steps 3-8: Photo sections (Motorhome-style)
+  // Map<String, Map<String, dynamic>> photoData = {
+  //   'Front': {'attachedFile': '', 'attachedFileBytes': null, 'comments': ''},
+  //   'Rear': {'attachedFile': '', 'attachedFileBytes': null, 'comments': ''},
+  //   'Nearside': {'attachedFile': '', 'attachedFileBytes': null, 'comments': ''},
+  //   'Offside': {'attachedFile': '', 'attachedFileBytes': null, 'comments': ''},
+  //   'Ceiling': {'attachedFile': '', 'attachedFileBytes': null, 'comments': ''},
+  //   'Floor': {'attachedFile': '', 'attachedFileBytes': null, 'comments': ''},
+  // };
 
   // Step 9: Finalization fields
   String dampMeterCalibration = '';

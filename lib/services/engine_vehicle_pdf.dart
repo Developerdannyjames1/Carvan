@@ -14,15 +14,17 @@ class EngineVehiclePdfService {
   }) async {
     final pdf = pw.Document();
 
-    // Load logo image
-    final logoImage = logoImageBytes != null
-        ? pw.MemoryImage(logoImageBytes)
-        : await _loadDefaultLogoImage();
+    // Check if user uploaded a main image (from Step 0) - use that as logo
+    final mainLogoImage = formData.mainImageBytes != null
+        ? pw.MemoryImage(formData.mainImageBytes!)
+        : (logoImageBytes != null
+            ? pw.MemoryImage(logoImageBytes)
+            : await _loadDefaultLogoImage());
 
-    // Get uploaded images if any
+    // Get uploaded images if any (from Step 2)
     final uploadedImages = images ?? formData.uploadedImages;
 
-    // Add first page with customer info and service sections
+    // =========== PAGE 1: Header and Customer Info ===========
     pdf.addPage(
       pw.Page(
         pageFormat: PdfPageFormat.a4,
@@ -31,16 +33,14 @@ class EngineVehiclePdfService {
           return pw.Column(
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
-              _buildHeader(formData, logoImage),
-              pw.SizedBox(height: 10),
-
-              // Customer Information Section
-              _buildCustomerInfoSection(formData),
+              // Header Section (with Main Info in header)
+              _buildHeader(formData, mainLogoImage, 1),
               pw.SizedBox(height: 15),
 
-               // Main Information Table
-              _buildSectionTitle('Mini Service'),
-              pw.SizedBox(height: 8),
+              // Customer Information Section
+
+              _buildCustomerInfoSection(formData),
+              pw.SizedBox(height: 10),
 
               // Service Sections - First Row
               pw.Row(
@@ -52,7 +52,6 @@ class EngineVehiclePdfService {
                 ],
               ),
               pw.SizedBox(height: 10),
-
               // Second Row: General Checks and Internal/Vision
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -63,7 +62,6 @@ class EngineVehiclePdfService {
                 ],
               ),
               pw.SizedBox(height: 10),
-
               // Third Row: Engine and Brake
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -74,26 +72,6 @@ class EngineVehiclePdfService {
                 ],
               ),
               pw.SizedBox(height: 10),
-              _buildPageFooter(1),
-            ],
-          );
-        },
-      ),
-    );
-
-    // Add second page
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(20),
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              _buildHeader(formData, logoImage),
-              pw.SizedBox(height: 10),
-
-              // First Row: Wheels & Tyres and Steering & Suspension
               pw.Row(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
@@ -113,33 +91,49 @@ class EngineVehiclePdfService {
                   _buildDriveSystemSection(formData),
                 ],
               ),
-              pw.SizedBox(height: 20),
 
-              // Comments Section
-              _buildCommentsSection(formData),
-              
-              // Add images section if there are any images
-              if (uploadedImages.isNotEmpty) ...[
-                pw.SizedBox(height: 20),
-                _buildImagesSection(uploadedImages),
-              ],
-              
-              pw.SizedBox(height: 10),
-              _buildPageFooter(2),
+              // Footer
+              _buildPageFooter(1),
             ],
           );
         },
       ),
     );
 
-    // Add additional pages for images if there are many
+    // =========== PAGE 2: Mini Service Sections ===========
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(20),
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              _buildHeader(formData, mainLogoImage, 2),
+              pw.SizedBox(height: 15),
+              // Comments Section
+              _buildCommentsSection(formData),
+              pw.SizedBox(height: 10),
+              // Add images section if there are any images (from Step 2)
+              if (uploadedImages.isNotEmpty) ...[
+                pw.SizedBox(height: 20),
+                _buildImagesSection(uploadedImages),
+              ],
+
+              _buildPageFooter(2),
+            ],
+          );
+        },
+      ),
+    );
+    // =========== ADDITIONAL PAGES FOR IMAGES ===========
     if (uploadedImages.length > 4) {
       for (int i = 0; i < uploadedImages.length; i += 4) {
         final pageImages = uploadedImages.sublist(
           i,
           i + 4 > uploadedImages.length ? uploadedImages.length : i + 4,
         );
-        
+
         pdf.addPage(
           pw.Page(
             pageFormat: PdfPageFormat.a4,
@@ -148,11 +142,11 @@ class EngineVehiclePdfService {
               return pw.Column(
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(formData, logoImage),
+                  _buildHeader(formData, mainLogoImage, 4 + (i ~/ 4)),
                   pw.SizedBox(height: 10),
                   _buildImagesSection(pageImages),
                   pw.SizedBox(height: 10),
-                  _buildPageFooter(3 + (i ~/ 4)),
+                  _buildPageFooter(4 + (i ~/ 4)),
                 ],
               );
             },
@@ -164,304 +158,384 @@ class EngineVehiclePdfService {
     return pdf.save();
   }
 
+  // ==================== HEADER ====================
   static pw.Widget _buildHeader(
     EngineVehicleModel formData,
     pw.ImageProvider? logoImage,
+    int pageNumber,
   ) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
-        // Logo and Title Row
         pw.Row(
           mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            // Logo
+            // Logo - Uses uploaded image from Step 0
             if (logoImage != null)
-              pw.Container(width: 80, height: 40, child: pw.Image(logoImage))
+              pw.Container(
+                width: 100,
+                height: 50,
+                child: pw.Image(logoImage, fit: pw.BoxFit.contain),
+              )
             else
               pw.Container(
-                width: 80,
-                height: 40,
-                decoration: pw.BoxDecoration(
-                  border: pw.Border.all(color: PdfColors.black, width: 0.5),
-                ),
-                child: pw.Center(
-                  child: pw.Text('LOGO', style: pw.TextStyle(fontSize: 8)),
-                ),
+                width: 100,
+                height: 50,
+                child: pw.Text('LOGO', style: pw.TextStyle(fontSize: 9)),
               ),
 
-            // Title
-            pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.center,
-              children: [
-                pw.Text(
-                  'MINI VEHICLE SERVICE FORM',
-                  style: pw.TextStyle(
-                    fontSize: 16,
-                    fontWeight: pw.FontWeight.bold,
+            pw.SizedBox(width: 15),
+
+            // Title and Info
+            pw.Expanded(
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'MINI VEHICLE SERVICE FORM',
+                    style: pw.TextStyle(
+                      fontSize: 14,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                    textAlign: pw.TextAlign.start,
                   ),
-                  textAlign: pw.TextAlign.center,
-                ),
-                pw.SizedBox(height: 4),
-                pw.Text(
-                  'Professional Vehicle Maintenance Record',
-                  style: pw.TextStyle(fontSize: 9),
-                  textAlign: pw.TextAlign.center,
-                ),
-              ],
+                  pw.SizedBox(height: 6),
+                  pw.Text(
+                    'Professional Vehicle Maintenance Record',
+                    style: pw.TextStyle(fontSize: 8),
+                    textAlign: pw.TextAlign.start,
+                  ),
+                  pw.SizedBox(height: 5),
+                  pw.Text(
+                    'Comprehensive vehicle inspection and service report',
+                    style: pw.TextStyle(fontSize: 7),
+                    textAlign: pw.TextAlign.start,
+                  ),
+                ],
+              ),
             ),
 
-            pw.Container(width: 80), // Empty container for spacing
+            pw.SizedBox(width: 15),
+
+            // Main Information displayed in header (Workshop Name & Address, Job Reference/Date)
+            pw.Container(
+              width: 120,
+              child: pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(
+                    'Workshop Name & Address',
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 2),
+                  pw.Text(
+                    formData.workshopName.isNotEmpty
+                        ? formData.workshopName
+                        : 'Not provided',
+                    style: pw.TextStyle(fontSize: 7),
+                  ),
+                  pw.SizedBox(height: 8),
+                  pw.Text(
+                    'Job Reference/Date',
+                    style: pw.TextStyle(
+                      fontSize: 8,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                  pw.SizedBox(height: 2),
+                  pw.Text(
+                    formData.jobReference.isNotEmpty
+                        ? formData.jobReference
+                        : 'Not provided',
+                    style: pw.TextStyle(fontSize: 7),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
-        pw.SizedBox(height: 8),
-        pw.Divider(thickness: 1),
+        pw.SizedBox(height: 10),
+
       ],
     );
   }
 
+  // ==================== REST OF THE CODE REMAINS EXACTLY THE SAME ====================
+
   static pw.Widget _buildCustomerInfoSection(EngineVehicleModel formData) {
     return pw.Container(
-      decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: PdfColors.black, width: 0.5),
-        borderRadius: pw.BorderRadius.circular(4),
-      ),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          // Header
-          pw.Container(
-            width: double.infinity,
-            padding: const pw.EdgeInsets.all(6),
-            decoration: const pw.BoxDecoration(
-              color: PdfColors.grey300,
-              borderRadius: pw.BorderRadius.only(
-                topLeft: pw.Radius.circular(4),
-                topRight: pw.Radius.circular(4),
+        decoration: pw.BoxDecoration(
+          border: pw.Border.all(color: PdfColors.black, width: 0.5),
+          borderRadius: pw.BorderRadius.circular(4),
+        ),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            // Header
+            pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.all(6),
+              decoration: const pw.BoxDecoration(
+                color: PdfColors.grey300,
+                borderRadius: pw.BorderRadius.only(
+                  topLeft: pw.Radius.circular(4),
+                  topRight: pw.Radius.circular(4),
+                ),
+              ),
+              child: pw.Text(
+                'CUSTOMER INFORMATION',
+                style: pw.TextStyle(
+                  fontSize: 11,
+                  fontWeight: pw.FontWeight.bold,
+                ),
               ),
             ),
-            child: pw.Text(
-              'CUSTOMER INFORMATION',
-              style: pw.TextStyle(
-                fontSize: 11,
-                fontWeight: pw.FontWeight.bold,
+
+            // Table Content
+            pw.Table(
+              border: pw.TableBorder.all(
+                width: 0.5,
+                color: PdfColors.grey400,
               ),
+              columnWidths: {
+                0: const pw.FlexColumnWidth(1.5), // Label column
+                1: const pw.FlexColumnWidth(2), // Value column
+                2: const pw.FlexColumnWidth(1.5), // Label column
+                3: const pw.FlexColumnWidth(2), // Value column
+              },
+              children: [
+                // First row: Customer Name and Vehicle Registration
+                pw.TableRow(
+                  decoration: pw.BoxDecoration(color: PdfColors.grey100),
+                  children: [
+                    // Customer Name Label
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(6),
+                      child: pw.Text(
+                        'Customer Name:',
+                        style: pw.TextStyle(
+                          fontSize: 9,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    // Customer Name Value
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(6),
+                      decoration: pw.BoxDecoration(
+                        color: PdfColors.white,
+                      ),
+                      child: pw.Text(
+                        formData.customerName.isNotEmpty
+                            ? formData.customerName
+                            : 'Not provided',
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    // Vehicle Registration Label
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(6),
+                      child: pw.Text(
+                        'Vehicle Registration:',
+                        style: pw.TextStyle(
+                          fontSize: 9,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    // Vehicle Registration Value
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(6),
+                      decoration: pw.BoxDecoration(
+                        color: PdfColors.white,
+                      ),
+                      child: pw.Text(
+                        formData.vehicleRegistration.isNotEmpty
+                            ? formData.vehicleRegistration
+                            : 'Not provided',
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // Second row: Mileage
+                pw.TableRow(
+                  decoration: pw.BoxDecoration(color: PdfColors.grey100),
+                  children: [
+                    // Mileage Label
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(6),
+                      child: pw.Text(
+                        'Mileage:',
+                        style: pw.TextStyle(
+                          fontSize: 9,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    // Mileage Value
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(6),
+                      decoration: pw.BoxDecoration(
+                        color: PdfColors.white,
+                      ),
+                      child: pw.Text(
+                        formData.mileage.isNotEmpty
+                            ? formData.mileage
+                            : 'Not provided',
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                    // Date of Inspection
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(6),
+                      child: pw.Text(
+                        'Date Of Inspection:',
+                        style: pw.TextStyle(
+                          fontSize: 9,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    pw.Container(
+                      padding: const pw.EdgeInsets.all(6),
+                      decoration: pw.BoxDecoration(
+                        color: PdfColors.white,
+                      ),
+                      child: pw.Text(
+                        formData.dateOfInspection.isNotEmpty
+                            ? formData.dateOfInspection
+                            : 'Not provided',
+                        style: pw.TextStyle(fontSize: 9),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ),
-          
-          // Table Content
-          pw.Table(
-            border: pw.TableBorder.all(
-              width: 0.5,
-              color: PdfColors.grey400,
-            ),
-            columnWidths: {
-              0: const pw.FlexColumnWidth(1.5), // Label column
-              1: const pw.FlexColumnWidth(2),   // Value column
-              2: const pw.FlexColumnWidth(1.5), // Label column
-              3: const pw.FlexColumnWidth(2),   // Value column
-            },
-            children: [
-              // First row: Customer Name and Vehicle Registration
-              pw.TableRow(
-                decoration: pw.BoxDecoration(color: PdfColors.grey100),
-                children: [
-                  // Customer Name Label
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(
-                      'Customer Name:',
-                      style: pw.TextStyle(
-                        fontSize: 9,
-                        fontWeight: pw.FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  // Customer Name Value
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(6),
-                    decoration: pw.BoxDecoration(
-                      color: PdfColors.white,
-                    ),
-                    child: pw.Text(
-                      formData.customerName.isNotEmpty 
-                          ? formData.customerName 
-                          : 'Not provided',
-                      style: pw.TextStyle(fontSize: 9),
-                    ),
-                  ),
-                  // Vehicle Registration Label
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(
-                      'Vehicle Registration:',
-                      style: pw.TextStyle(
-                        fontSize: 9,
-                        fontWeight: pw.FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  // Vehicle Registration Value
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(6),
-                    decoration: pw.BoxDecoration(
-                      color: PdfColors.white,
-                    ),
-                    child: pw.Text(
-                      formData.vehicleRegistration.isNotEmpty 
-                          ? formData.vehicleRegistration 
-                          : 'Not provided',
-                      style: pw.TextStyle(fontSize: 9),
-                    ),
-                  ),
-                ],
-              ),
-              
-              // Second row: Mileage and Date of Inspection
-              pw.TableRow(
-                decoration: pw.BoxDecoration(color: PdfColors.grey100),
-                children: [
-                  // Mileage Label
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(
-                      'Mileage:',
-                      style: pw.TextStyle(
-                        fontSize: 9,
-                        fontWeight: pw.FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  // Mileage Value
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(6),
-                    decoration: pw.BoxDecoration(
-                      color: PdfColors.white,
-                    ),
-                    child: pw.Text(
-                      formData.mileage.isNotEmpty 
-                          ? formData.mileage 
-                          : 'Not provided',
-                      style: pw.TextStyle(fontSize: 9),
-                    ),
-                  ),
-                  // Date of Inspection Label
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(
-                      'Date of Inspection:',
-                      style: pw.TextStyle(
-                        fontSize: 9,
-                        fontWeight: pw.FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  // Date of Inspection Value
-                  pw.Container(
-                    padding: const pw.EdgeInsets.all(6),
-                    decoration: pw.BoxDecoration(
-                      color: PdfColors.white,
-                    ),
-                    child: pw.Text(
-                      formData.dateOfInspection.isNotEmpty 
-                          ? formData.dateOfInspection 
-                          : 'Not provided',
-                      style: pw.TextStyle(fontSize: 9),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ));
+          ],
+        ));
   }
 
   // Individual section builders for each category
   static pw.Widget _buildPartsIncludedSection(EngineVehicleModel formData) {
-    String mainDropdownValue = formData.mainDropdownValues['Parts Included'] ?? '';
-    Map<String, String> detailedData = formData.miniServiceData['Parts Included'] ?? {};
+    String mainDropdownValue =
+        formData.mainDropdownValues['Parts Included'] ?? '';
+    Map<String, String> detailedData =
+        formData.miniServiceData['Parts Included'] ?? {};
     List<String> items = ['Engine Oil', 'Oil Filter'];
-    
-    return _buildCompleteSection('Parts Included', mainDropdownValue, items, detailedData);
+
+    return _buildCompleteSection(
+        'Parts Included', mainDropdownValue, items, detailedData);
   }
 
   static pw.Widget _buildTopupsIncludedSection(EngineVehicleModel formData) {
-    String mainDropdownValue = formData.mainDropdownValues['Top-ups Included'] ?? '';
-    Map<String, String> detailedData = formData.miniServiceData['Top-ups Included'] ?? {};
+    String mainDropdownValue =
+        formData.mainDropdownValues['Top-ups Included'] ?? '';
+    Map<String, String> detailedData =
+        formData.miniServiceData['Top-ups Included'] ?? {};
     List<String> items = [
       'Windscreen Additive',
       'Coolant',
       'Brake Fluid',
       'Power Steering Fluid',
     ];
-    
-    return _buildCompleteSection('Top-ups Included', mainDropdownValue, items, detailedData);
+
+    return _buildCompleteSection(
+        'Top-ups Included', mainDropdownValue, items, detailedData);
   }
 
   static pw.Widget _buildGeneralChecksSection(EngineVehicleModel formData) {
-    String mainDropdownValue = formData.mainDropdownValues['General Checks'] ?? '';
-    Map<String, String> detailedData = formData.miniServiceData['General Checks'] ?? {};
+    String mainDropdownValue =
+        formData.mainDropdownValues['General Checks'] ?? '';
+    Map<String, String> detailedData =
+        formData.miniServiceData['General Checks'] ?? {};
     List<String> items = ['External Lights', 'Instrument warning'];
-    
-    return _buildCompleteSection('General Checks', mainDropdownValue, items, detailedData);
+
+    return _buildCompleteSection(
+        'General Checks', mainDropdownValue, items, detailedData);
   }
 
   static pw.Widget _buildInternalVisionSection(EngineVehicleModel formData) {
-    String mainDropdownValue = formData.mainDropdownValues['Internal/Vision'] ?? '';
-    Map<String, String> detailedData = formData.miniServiceData['Internal/Vision'] ?? {};
+    String mainDropdownValue =
+        formData.mainDropdownValues['Internal/Vision'] ?? '';
+    Map<String, String> detailedData =
+        formData.miniServiceData['Internal/Vision'] ?? {};
     List<String> items = ['Condition of Windscreen', 'Wiper and Washers'];
-    
-    return _buildCompleteSection('Internal/Vision', mainDropdownValue, items, detailedData);
+
+    return _buildCompleteSection(
+        'Internal/Vision', mainDropdownValue, items, detailedData);
   }
 
   static pw.Widget _buildEngineSection(EngineVehicleModel formData) {
     String mainDropdownValue = formData.mainDropdownValues['Engine'] ?? '';
     Map<String, String> detailedData = formData.miniServiceData['Engine'] ?? {};
-    List<String> items = ['General Oil Leaks', 'Antifreeze Strength', 'Timing Belt'];
-    
-    return _buildCompleteSection('Engine', mainDropdownValue, items, detailedData);
+    List<String> items = [
+      'General Oil Leaks',
+      'Antifreeze Strength',
+      'Timing Belt'
+    ];
+
+    return _buildCompleteSection(
+        'Engine', mainDropdownValue, items, detailedData);
   }
 
   static pw.Widget _buildBrakeSection(EngineVehicleModel formData) {
     String mainDropdownValue = formData.mainDropdownValues['Brake'] ?? '';
     Map<String, String> detailedData = formData.miniServiceData['Brake'] ?? {};
     List<String> items = ['Visual Check of brake pads'];
-    
-    return _buildCompleteSection('Brake', mainDropdownValue, items, detailedData);
+
+    return _buildCompleteSection(
+        'Brake', mainDropdownValue, items, detailedData);
   }
 
   static pw.Widget _buildWheelsTyresSection(EngineVehicleModel formData) {
-    String mainDropdownValue = formData.mainDropdownValues['Wheels & Tyres'] ?? '';
-    Map<String, String> detailedData = formData.miniServiceData['Wheels & Tyres'] ?? {};
+    String mainDropdownValue =
+        formData.mainDropdownValues['Wheels & Tyres'] ?? '';
+    Map<String, String> detailedData =
+        formData.miniServiceData['Wheels & Tyres'] ?? {};
     List<String> items = ['Tyre Condition', 'Tyre Pressure'];
-    
-    return _buildCompleteSection('Wheels & Tyres', mainDropdownValue, items, detailedData);
+
+    return _buildCompleteSection(
+        'Wheels & Tyres', mainDropdownValue, items, detailedData);
   }
 
-  static pw.Widget _buildSteeringSuspensionSection(EngineVehicleModel formData) {
-    String mainDropdownValue = formData.mainDropdownValues['Steering & Suspension'] ?? '';
-    Map<String, String> detailedData = formData.miniServiceData['Steering & Suspension'] ?? {};
+  static pw.Widget _buildSteeringSuspensionSection(
+      EngineVehicleModel formData) {
+    String mainDropdownValue =
+        formData.mainDropdownValues['Steering & Suspension'] ?? '';
+    Map<String, String> detailedData =
+        formData.miniServiceData['Steering & Suspension'] ?? {};
     List<String> items = ['Steering Rack condition'];
-    
-    return _buildCompleteSection('Steering & Suspension', mainDropdownValue, items, detailedData);
+
+    return _buildCompleteSection(
+        'Steering & Suspension', mainDropdownValue, items, detailedData);
   }
 
   static pw.Widget _buildExhaustSection(EngineVehicleModel formData) {
     String mainDropdownValue = formData.mainDropdownValues['Exhaust'] ?? '';
-    Map<String, String> detailedData = formData.miniServiceData['Exhaust'] ?? {};
+    Map<String, String> detailedData =
+        formData.miniServiceData['Exhaust'] ?? {};
     List<String> items = ['Exhaust condition'];
-    
-    return _buildCompleteSection('Exhaust', mainDropdownValue, items, detailedData);
+
+    return _buildCompleteSection(
+        'Exhaust', mainDropdownValue, items, detailedData);
   }
 
   static pw.Widget _buildDriveSystemSection(EngineVehicleModel formData) {
-    String mainDropdownValue = formData.mainDropdownValues['Drive System'] ?? '';
-    Map<String, String> detailedData = formData.miniServiceData['Drive System'] ?? {};
+    String mainDropdownValue =
+        formData.mainDropdownValues['Drive System'] ?? '';
+    Map<String, String> detailedData =
+        formData.miniServiceData['Drive System'] ?? {};
     List<String> items = ['Clutch Fluid level', 'Transmission oil'];
-    
-    return _buildCompleteSection('Drive System', mainDropdownValue, items, detailedData);
+
+    return _buildCompleteSection(
+        'Drive System', mainDropdownValue, items, detailedData);
   }
 
   // Universal method to build complete section with main dropdown value and detailed items
@@ -499,7 +573,7 @@ class EngineVehiclePdfService {
               ),
             ),
           ),
-          
+
           // Checkbox table
           pw.Table(
             border: pw.TableBorder.all(width: 0.3),
@@ -517,35 +591,45 @@ class EngineVehiclePdfService {
                 children: [
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(3),
-                    child: pw.Text('Item', style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold)),
+                    child: pw.Text('Item',
+                        style: pw.TextStyle(
+                            fontSize: 7, fontWeight: pw.FontWeight.bold)),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(3),
                     child: pw.Center(
-                      child: pw.Text('P', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                      child: pw.Text('P',
+                          style: pw.TextStyle(
+                              fontSize: 8, fontWeight: pw.FontWeight.bold)),
                     ),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(3),
                     child: pw.Center(
-                      child: pw.Text('F', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                      child: pw.Text('F',
+                          style: pw.TextStyle(
+                              fontSize: 8, fontWeight: pw.FontWeight.bold)),
                     ),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(3),
                     child: pw.Center(
-                      child: pw.Text('N/A', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                      child: pw.Text('N/A',
+                          style: pw.TextStyle(
+                              fontSize: 8, fontWeight: pw.FontWeight.bold)),
                     ),
                   ),
                   pw.Padding(
                     padding: const pw.EdgeInsets.all(3),
                     child: pw.Center(
-                      child: pw.Text('R', style: pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                      child: pw.Text('R',
+                          style: pw.TextStyle(
+                              fontSize: 8, fontWeight: pw.FontWeight.bold)),
                     ),
                   ),
                 ],
               ),
-              
+
               // Main dropdown value row (FIRST ROW - shows main dropdown selection)
               pw.TableRow(
                 children: [
@@ -553,7 +637,8 @@ class EngineVehiclePdfService {
                     padding: const pw.EdgeInsets.all(3),
                     child: pw.Text(
                       '$title',
-                      style: pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold),
+                      style: pw.TextStyle(
+                          fontSize: 7, fontWeight: pw.FontWeight.bold),
                     ),
                   ),
                   pw.Padding(
@@ -582,7 +667,7 @@ class EngineVehiclePdfService {
                   ),
                 ],
               ),
-              
+
               // Detailed items rows (Engine Oil, Oil Filter, etc.)
               for (var item in items)
                 pw.TableRow(
@@ -642,45 +727,46 @@ class EngineVehiclePdfService {
 
   static pw.Widget _buildCommentsSection(EngineVehicleModel formData) {
     return pw.Container(
-      width: double.infinity,
-      decoration: pw.BoxDecoration(
-        border: pw.Border.all(color: PdfColors.black, width: 0.5),
-        borderRadius: pw.BorderRadius.circular(4),
-      ),
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          // Header
-          pw.Container(
-            width: double.infinity,
-            padding: const pw.EdgeInsets.all(6),
-            decoration: pw.BoxDecoration(
-              color: PdfColors.grey300,
-              borderRadius: const pw.BorderRadius.only(
-                topLeft: pw.Radius.circular(4),
-                topRight: pw.Radius.circular(4),
+        width: double.infinity,
+        decoration: pw.BoxDecoration(
+          border: pw.Border.all(color: PdfColors.black, width: 0.5),
+          borderRadius: pw.BorderRadius.circular(4),
+        ),
+        child: pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            // Header
+            pw.Container(
+              width: double.infinity,
+              padding: const pw.EdgeInsets.all(6),
+              decoration: pw.BoxDecoration(
+                color: PdfColors.grey300,
+                borderRadius: const pw.BorderRadius.only(
+                  topLeft: pw.Radius.circular(4),
+                  topRight: pw.Radius.circular(4),
+                ),
+              ),
+              child: pw.Text(
+                'COMMENTS',
+                style: pw.TextStyle(
+                  fontSize: 11,
+                  fontWeight: pw.FontWeight.bold,
+                ),
               ),
             ),
-            child: pw.Text(
-              'COMMENTS',
-              style: pw.TextStyle(
-                fontSize: 11,
-                fontWeight: pw.FontWeight.bold,
+
+            // Content
+            pw.Padding(
+              padding: const pw.EdgeInsets.all(10),
+              child: pw.Text(
+                formData.comments.isNotEmpty
+                    ? formData.comments
+                    : 'No comments provided',
+                style: pw.TextStyle(fontSize: 9),
               ),
             ),
-          ),
-          
-          // Content
-          pw.Padding(
-            padding: const pw.EdgeInsets.all(10),
-            child: pw.Text(
-              formData.comments.isNotEmpty ? formData.comments : 'No comments provided',
-              style: pw.TextStyle(fontSize: 9),
-            ),
-          ),
-        ],
-      ),
-    );
+          ],
+        ));
   }
 
   static pw.Widget _buildImagesSection(List<Uint8List> images) {
@@ -712,7 +798,7 @@ class EngineVehiclePdfService {
               ),
             ),
           ),
-          
+
           // Images Grid
           pw.Padding(
             padding: const pw.EdgeInsets.all(10),
@@ -725,7 +811,8 @@ class EngineVehiclePdfService {
                     width: 80,
                     height: 80,
                     decoration: pw.BoxDecoration(
-                      border: pw.Border.all(color: PdfColors.grey300, width: 0.5),
+                      border:
+                          pw.Border.all(color: PdfColors.grey300, width: 0.5),
                       borderRadius: pw.BorderRadius.circular(4),
                     ),
                     child: pw.Image(
@@ -738,14 +825,16 @@ class EngineVehiclePdfService {
                     width: 80,
                     height: 80,
                     decoration: pw.BoxDecoration(
-                      border: pw.Border.all(color: PdfColors.grey300, width: 0.5),
+                      border:
+                          pw.Border.all(color: PdfColors.grey300, width: 0.5),
                       color: PdfColors.grey200,
                       borderRadius: pw.BorderRadius.circular(4),
                     ),
                     child: pw.Center(
                       child: pw.Text(
                         'Image',
-                        style: pw.TextStyle(fontSize: 7, color: PdfColors.grey600),
+                        style:
+                            pw.TextStyle(fontSize: 7, color: PdfColors.grey600),
                       ),
                     ),
                   );
@@ -758,7 +847,7 @@ class EngineVehiclePdfService {
     );
   }
 
-    // ==================== SECTION TITLE ====================
+  // ==================== SECTION TITLE ====================
   static pw.Widget _buildSectionTitle(String title) {
     return pw.Container(
       width: double.infinity,

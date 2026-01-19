@@ -2,6 +2,11 @@
 import 'dart:typed_data';
 
 class EngineVehicleModel {
+   // New fields for Main Information
+ String workshopName = '';
+  String jobReference = '';
+  Uint8List? mainImageBytes;
+
   // Customer Information
   String customerName = '';
   String vehicleRegistration = '';

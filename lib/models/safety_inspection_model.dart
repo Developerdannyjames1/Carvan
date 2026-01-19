@@ -1,10 +1,18 @@
 // safety_inspection_model.dart
 
+import 'dart:typed_data';
+
 class SafetyInspectionModel {
+
+ // New fields for Main Information
+ String workShopName = '';
+ String JobReference = '';
+ Uint8List? mainImageBytes;
   // Customer Information
   String vehicleRegistration = '';
   String mileage = '';
   String makeModel = '';
+  String dateOfInspection = '';
   String workshopName = '';
   String jobReference = '';
   String operator = '';

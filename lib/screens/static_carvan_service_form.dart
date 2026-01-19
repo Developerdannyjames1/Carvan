@@ -3853,7 +3853,7 @@ class _StaticCarvanServiceFormState extends State<StaticCarvanServiceForm> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
-                    onPressed: () => Get.back(),
+                   onPressed: _showExitConfirmation, 
                   ),
                   const Spacer(),
                   Container(
@@ -6745,6 +6745,7 @@ Future<void> _selectDate(BuildContext context) async {
   void _showExitConfirmation() {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (context) => AlertDialog(
         title: Text('Exit Form?', style: TextStyle(fontFamily: 'PolySans')),
         content: const Text(
@@ -6753,7 +6754,7 @@ Future<void> _selectDate(BuildContext context) async {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context), // Just close dialog
             child: Text(
               'Cancel',
               style: TextStyle(
@@ -6764,7 +6765,9 @@ Future<void> _selectDate(BuildContext context) async {
           ),
           TextButton(
             onPressed: () {
+              // First close the dialog
               Navigator.pop(context);
+              // Then exit the form page
               Navigator.pop(context);
             },
             child: const Text(
